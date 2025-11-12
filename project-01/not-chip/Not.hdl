@@ -1,0 +1,17 @@
+/**
+ * Not gate:
+ * if (in) out = 0, else out = 1
+ */
+CHIP Not {
+    IN in;
+    OUT out;
+
+    PARTS:
+    /*
+    * we simply and the input with 1
+    * and finally not to get opp value 
+    * thing to learn here is 
+    * foo AND 1 will always give you foo (given that foo is binary number)
+    */
+    Nand(in=in,true,out=out);
+}
