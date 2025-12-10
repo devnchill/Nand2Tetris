@@ -1,0 +1,70 @@
+/**
+ * The Hack Central Processing unit (CPU).
+ * Parses the binary code in the instruction input and executes it according to the
+ * Hack machine language specification. In the case of a C-instruction, computes the
+ * function specified by the instruction. If the instruction specifies to read a memory
+ * value, the inM input is expected to contain this value. If the instruction specifies
+ * to write a value to the memory, sets the outM output to this value, sets the addressM
+ * output to the target address, and asserts the writeM output (when writeM = 0, any
+ * value may appear in outM).
+ * If the reset input is 0, computes the address of the next instruction and sets the
+ * pc output to that value. If the reset input is 1, sets pc to 0.
+ * Note: The outM and writeM outputs are combinational: they are affected by the
+ * instruction's execution during the current cycle. The addressM and pc outputs are
+ * clocked: although they are affected by the instruction's execution, they commit to
+ * their new values only in the next cycle.
+ */
+CHIP CPU {
+
+    IN  inM[16],
+        instruction[16],
+        reset;
+
+    OUT outM[16],
+        writeM,
+        addressM[15],
+        pc[15];
+
+    PARTS:
+      Mux16(sel=instruction[15], a=instruction, b=outALU, out=inARegister);
+      Not(in=instruction[15], out=outOpCode);
+      Or(a=outOpCode, b=instruction[5], out=loadARegister);
+      ARegister(in=inARegister, load=loadARegister, out[0..14]=addressM, out=outARegister);
+
+      And(a=instruction[15], b=instruction[12], out=AorM);
+      Mux16(a=outARegister, b=inM, sel=AorM, out=outYforALU);
+
+      ALU(
+        x=outDRegister,
+        y=outYforALU,
+        zx=instruction[11],
+        nx=instruction[10],
+        zy=instruction[9],
+        ny=instruction[8],
+        f=instruction[7],
+        no=instruction[6],
+        out=outALU,
+        zr=zr,
+        ng=ng
+      );
+
+      And16(a=outALU, b=true, out=outM);
+
+      And(a=instruction[3], b=instruction[15], out=writeM);
+
+      And(a=instruction[15], b=instruction[4], out=loadDRegister);
+      DRegister(in=outALU, load=loadDRegister, out=outDRegister);
+
+      And(a=instruction[2], b=ng, out=outJLT);
+      And(a=instruction[1], b=zr, out=outJEQ);
+      Not(in=zr, out=notZR);
+      Not(in=ng, out=notNG);
+      And(a=notZR, b=notNG, out=andNotZrNotNg);
+      And(a=instruction[0], b=andNotZrNotNg, out=outJGT);
+      Or(a=outJLT, b=outJGT, out=outInequality);
+      Or(a=outInequality, b=outJEQ, out=isJump);
+
+      And(a=instruction[15], b=isJump, out=outLoad);
+      Not(in=outLoad, out=notOutLoad);
+      PC(in=outARegister, load=outLoad, inc=notOutLoad, reset=reset, out[0..14]=pc);
+}
