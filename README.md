@@ -63,3 +63,11 @@
 - [Computer](project-05/computer/Computer.hdl)
 
 </details>
+
+<details>
+  <summary><strong>project-06 — Hack Assembler</strong></summary>
+
+- [Assembler](project-06/assembler/main.go)
+- [Test Programs](project-06/test)
+
+</details>
