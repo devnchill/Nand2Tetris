@@ -7,11 +7,10 @@ import (
 	"strings"
 )
 
-func readFile(filePath string) {
+func readFile(filePath string) ([]string, error) {
 	filePointer, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return nil, err
 	}
 	defer filePointer.Close()
 	scanner := bufio.NewScanner(filePointer)
@@ -28,10 +27,18 @@ func readFile(filePath string) {
 	for _, in := range instructions {
 		fmt.Printf("%s\n", in)
 	}
+	return instructions, nil
 }
 
 func main() {
 	args := os.Args
 	asmFilePath := args[1]
-	readFile(asmFilePath)
+	instructions, err := readFile(asmFilePath)
+	if err != nil {
+		fmt.Printf("%s", err)
+		return
+	}
+	for _, in := range instructions {
+		fmt.Printf("%s\n", in)
+	}
 }
