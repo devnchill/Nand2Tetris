@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func readFile(filePath string) {
@@ -14,18 +15,18 @@ func readFile(filePath string) {
 	}
 	defer filePointer.Close()
 	scanner := bufio.NewScanner(filePointer)
+	var instructions []string
 	for scanner.Scan() {
-		line := scanner.Text()
-		for i, ch := range line {
-			if (ch == '/' && rune(line[i+1]) == '/') || ch == ' ' {
-				// ignoring all comments and empty line and empty space
-				fmt.Println("found a comment exiting")
-				break
-			} else {
-				fmt.Printf("%c", ch)
-			}
+		currLine := scanner.Text()
+		l1 := strings.Split(strings.TrimSpace(currLine), "//")[0]
+		if strings.TrimSpace(l1) == "" {
+			continue
 		}
-		fmt.Println()
+		l2 := strings.Join(strings.Split(l1, " "), "")
+		instructions = append(instructions, l2)
+	}
+	for _, in := range instructions {
+		fmt.Printf("%s\n", in)
 	}
 }
 
