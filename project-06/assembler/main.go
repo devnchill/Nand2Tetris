@@ -3,17 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
+
+	parser "github.com/devnchill/Nand2Tetris/project-06/assembler/parser"
 )
 
 func main() {
-	args := os.Args
-	asmFilePath := args[1]
-	instructions, err := readFile(asmFilePath)
+	filePath := os.Args[1]
+	p, err := parser.NewParser(filePath)
 	if err != nil {
-		fmt.Printf("%s", err)
+		fmt.Printf("%v", err)
 		return
 	}
-	for _, in := range instructions {
-		fmt.Printf("%s\n", in)
-	}
+	p.Parse()
 }
