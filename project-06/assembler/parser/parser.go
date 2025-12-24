@@ -5,9 +5,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
-
-	"github.com/devnchill/Nand2Tetris/project-06/assembler/util"
 )
 
 type Parser struct {
@@ -63,27 +62,46 @@ func (p *Parser) getCommandType() (TCommandType, error) {
 // NOTE: Atm we are not worrying about symbols so we'll convert all xxx to decimal value
 func (p *Parser) getSymbol(commandType TCommandType) (string, error) {
 	if commandType == ACommand {
-		val, err := util.DecimalToBinary(p.currentCommand)
+		decimalNumber, err := strconv.Atoi(p.currentCommand[1:])
+		val := fmt.Sprintf("%b", decimalNumber)
 		if err != nil {
 			return "", err
 		}
 		return val, nil
 	}
+	// for LCommand
 	return strings.Split((strings.Split(p.currentCommand, ")")[0]), "(")[1], nil
 }
 
 // should only be called for C instructions
 // Format of CInstruction = getDest = comp;jump
+func (p *Parser) hasDest() bool {
+	return strings.Contains(p.currentCommand, "=")
+}
+
+func (p *Parser) hasJump() bool {
+	return strings.Contains(p.currentCommand, ";")
+}
+
+// should only be called for C instructions and only when dest is present
 func (p *Parser) getDest() string {
 	return strings.TrimSpace(strings.Split(p.currentCommand, "=")[0])
 }
 
 // should only be called for C instructions
 func (p *Parser) getComp() string {
-	return strings.Split(strings.Split(p.currentCommand, ";")[0], "=")[1]
+	if p.hasDest() && p.hasJump() {
+		return strings.Split(strings.Split(p.currentCommand, ";")[0], "=")[1]
+	} else if p.hasDest() && !p.hasJump() {
+		return strings.Split(p.currentCommand, "=")[1]
+	} else if !p.hasDest() && p.hasJump() {
+		return strings.Split(p.currentCommand, ";")[0]
+	} else {
+		return p.currentCommand
+	}
 }
 
-// should only be called for C instructions
+// should only be called for C instructions and only when jump is present
 func (p *Parser) getJump() string {
 	if strings.Contains(p.currentCommand, ";") {
 		return strings.Split(p.currentCommand, ";")[1]
@@ -105,9 +123,13 @@ func (p *Parser) Parse() {
 		if commandType == ACommand || commandType == LCommand {
 			fmt.Println(p.getSymbol(commandType))
 		} else {
-			fmt.Printf("dest -> %s\n", p.getDest())
+			if p.hasDest() {
+				fmt.Printf("dest -> %s\n", p.getDest())
+			}
 			fmt.Printf("comp -> %s\n", p.getComp())
-			fmt.Printf("jump -> %s\n", p.getJump())
+			if p.hasJump() {
+				fmt.Printf("jump -> %s\n", p.getJump())
+			}
 		}
 	}
 	fmt.Println("Done Parsing")
