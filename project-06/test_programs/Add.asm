@@ -7,6 +7,6 @@
 @2
 D=A
 @3
-D=D+A;jmp
+D=D+A;JMP
 @0
 M=D

@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/devnchill/Nand2Tetris/project-06/assembler/translator"
 )
 
 type Parser struct {
@@ -110,6 +112,7 @@ func (p *Parser) getJump() string {
 }
 
 func (p *Parser) Parse() {
+	t := translator.NewTranslator()
 	for p.advance() {
 		commandType, err := p.getCommandType()
 		if err != nil {
@@ -125,10 +128,30 @@ func (p *Parser) Parse() {
 		} else {
 			if p.hasDest() {
 				fmt.Printf("dest -> %s\n", p.getDest())
+				destInBinary, err := t.TranslateDest(p.getDest())
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+				fmt.Printf("dest in binary -> %s\n", destInBinary)
 			}
 			fmt.Printf("comp -> %s\n", p.getComp())
+			compInBinary, err := t.TranslateComp(p.getComp())
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+			fmt.Printf("comp in binary -> %s\n", compInBinary)
+
 			if p.hasJump() {
 				fmt.Printf("jump -> %s\n", p.getJump())
+				jumpInBinary, err := t.TranslateJump(p.getJump())
+				if err != nil {
+					fmt.Println(err)
+					break
+				}
+				fmt.Printf("jump in binary -> %s\n", jumpInBinary)
+
 			}
 		}
 	}
