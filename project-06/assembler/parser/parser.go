@@ -113,6 +113,12 @@ func (p *Parser) getJump() string {
 
 func (p *Parser) Parse() {
 	t := translator.NewTranslator()
+	f, err := os.Create("Prog.hack")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer f.Close()
 	for p.advance() {
 		commandType, err := p.getCommandType()
 		if err != nil {
@@ -124,11 +130,19 @@ func (p *Parser) Parse() {
 		fmt.Printf("current Insturction -> %s\n", p.currentCommand)
 		fmt.Printf("commandType ->%d\n", commandType)
 		if commandType == ACommand || commandType == LCommand {
-			fmt.Println(p.getSymbol(commandType))
+			if binaryVal, err := p.getSymbol(commandType); err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(binaryVal)
+				f.WriteString(binaryVal)
+				f.WriteString("\n")
+			}
 		} else {
+			f.WriteString("111")
 			if p.hasDest() {
 				fmt.Printf("dest -> %s\n", p.getDest())
 				destInBinary, err := t.TranslateDest(p.getDest())
+				f.WriteString(destInBinary)
 				if err != nil {
 					fmt.Println(err)
 					break
@@ -137,6 +151,7 @@ func (p *Parser) Parse() {
 			}
 			fmt.Printf("comp -> %s\n", p.getComp())
 			compInBinary, err := t.TranslateComp(p.getComp())
+			f.WriteString(compInBinary)
 			if err != nil {
 				fmt.Println(err)
 				break
@@ -146,6 +161,8 @@ func (p *Parser) Parse() {
 			if p.hasJump() {
 				fmt.Printf("jump -> %s\n", p.getJump())
 				jumpInBinary, err := t.TranslateJump(p.getJump())
+				f.WriteString(jumpInBinary)
+				f.WriteString("\n")
 				if err != nil {
 					fmt.Println(err)
 					break
