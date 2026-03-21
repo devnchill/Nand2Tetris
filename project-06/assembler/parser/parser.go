@@ -3,17 +3,13 @@ package parser
 
 import (
 	"bufio"
-	"fmt"
 	"os"
-	"strconv"
 	"strings"
-
-	"github.com/devnchill/Nand2Tetris/project-06/assembler/translator"
 )
 
 type Parser struct {
 	inputScanner      *bufio.Scanner
-	currentCommand    string
+	CurrentCommand    string
 	lenCurrentCommand int
 }
 
@@ -33,148 +29,75 @@ func NewParser(filePath string) (*Parser, error) {
 	scanner := bufio.NewScanner(filePointer)
 	return &Parser{
 		inputScanner:   scanner,
-		currentCommand: "",
+		CurrentCommand: "",
 	}, nil
 }
 
-func (p *Parser) advance() bool {
+func (p *Parser) Advance() bool {
 	for p.inputScanner.Scan() {
 		instruction := strings.Split(strings.TrimSpace(p.inputScanner.Text()), "//")[0]
 		if instruction == "" {
 			continue
 		}
-		p.currentCommand = strings.Join(strings.Split(instruction, " "), "")
-		p.lenCurrentCommand = len(p.currentCommand)
+		p.CurrentCommand = strings.Join(strings.Split(instruction, " "), "")
+		p.lenCurrentCommand = len(p.CurrentCommand)
 		return true
 	}
 	return false
 }
 
 // to be called after advancing to new line
-func (p *Parser) getCommandType() (TCommandType, error) {
-	if p.currentCommand[0] == '@' {
+func (p *Parser) GetCommandType() (TCommandType, error) {
+	if p.CurrentCommand[0] == '@' {
 		return ACommand, nil
 	}
-	if p.currentCommand[0] == '(' && p.currentCommand[p.lenCurrentCommand-1] == ')' {
+	if p.CurrentCommand[0] == '(' && p.CurrentCommand[p.lenCurrentCommand-1] == ')' {
 		return LCommand, nil
 	}
 	return CCommand, nil
 }
 
 // NOTE: Atm we are not worrying about symbols so we'll convert all xxx to decimal value
-func (p *Parser) getSymbol(commandType TCommandType) (string, error) {
+func (p *Parser) GetSymbol(commandType TCommandType) (string, error) {
 	if commandType == ACommand {
-		decimalNumber, err := strconv.Atoi(p.currentCommand[1:])
-		val := fmt.Sprintf("%016b", decimalNumber)
-		if err != nil {
-			return "", err
-		}
-		return val, nil
+		return p.CurrentCommand[1:], nil
 	}
 	// for LCommand
-	return strings.Split((strings.Split(p.currentCommand, ")")[0]), "(")[1], nil
+	return strings.Split((strings.Split(p.CurrentCommand, ")")[0]), "(")[1], nil
 }
 
 // should only be called for C instructions
 // Format of CInstruction = getDest = comp;jump
-func (p *Parser) hasDest() bool {
-	return strings.Contains(p.currentCommand, "=")
+func (p *Parser) HasDest() bool {
+	return strings.Contains(p.CurrentCommand, "=")
 }
 
-func (p *Parser) hasJump() bool {
-	return strings.Contains(p.currentCommand, ";")
+func (p *Parser) HasJump() bool {
+	return strings.Contains(p.CurrentCommand, ";")
 }
 
 // should only be called for C instructions and only when dest is present
-func (p *Parser) getDest() string {
-	return strings.TrimSpace(strings.Split(p.currentCommand, "=")[0])
+func (p *Parser) GetDest() string {
+	return strings.TrimSpace(strings.Split(p.CurrentCommand, "=")[0])
 }
 
 // should only be called for C instructions
-func (p *Parser) getComp() string {
-	if p.hasDest() && p.hasJump() {
-		return strings.Split(strings.Split(p.currentCommand, ";")[0], "=")[1]
-	} else if p.hasDest() && !p.hasJump() {
-		return strings.Split(p.currentCommand, "=")[1]
-	} else if !p.hasDest() && p.hasJump() {
-		return strings.Split(p.currentCommand, ";")[0]
+func (p *Parser) GetComp() string {
+	if p.HasDest() && p.HasJump() {
+		return strings.Split(strings.Split(p.CurrentCommand, ";")[0], "=")[1]
+	} else if p.HasDest() && !p.HasJump() {
+		return strings.Split(p.CurrentCommand, "=")[1]
+	} else if !p.HasDest() && p.HasJump() {
+		return strings.Split(p.CurrentCommand, ";")[0]
 	} else {
-		return p.currentCommand
+		return p.CurrentCommand
 	}
 }
 
 // should only be called for C instructions and only when jump is present
-func (p *Parser) getJump() string {
-	if strings.Contains(p.currentCommand, ";") {
-		return strings.Split(p.currentCommand, ";")[1]
+func (p *Parser) GetJump() string {
+	if strings.Contains(p.CurrentCommand, ";") {
+		return strings.Split(p.CurrentCommand, ";")[1]
 	}
 	return ""
-}
-
-func (p *Parser) Parse() {
-	t := translator.NewTranslator()
-	f, err := os.Create("Prog.hack")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer f.Close()
-	for p.advance() {
-		commandType, err := p.getCommandType()
-		if err != nil {
-			fmt.Printf("Invalid Insturction detected \n")
-			fmt.Printf("%s was the currentCommand\n", p.currentCommand)
-			break
-		}
-		// now we have a valid commadntype
-		fmt.Printf("current Insturction -> %s\n", p.currentCommand)
-		fmt.Printf("commandType ->%s\n", getCommandTypeInString(commandType))
-		if commandType == ACommand || commandType == LCommand {
-			if binaryVal, err := p.getSymbol(commandType); err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Println(binaryVal)
-				f.WriteString(binaryVal)
-				f.WriteString("\n")
-			}
-		} else {
-			f.WriteString("111")
-			if p.hasDest() {
-				fmt.Printf("dest -> %s\n", p.getDest())
-				destInBinary, err := t.TranslateDest(p.getDest())
-				f.WriteString(destInBinary)
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-				fmt.Printf("dest in binary -> %s\n", destInBinary)
-			} else {
-				f.WriteString("000")
-			}
-			fmt.Printf("comp -> %s\n", p.getComp())
-			compInBinary, err := t.TranslateComp(p.getComp())
-			f.WriteString(compInBinary)
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-			fmt.Printf("comp in binary -> %s\n", compInBinary)
-
-			if p.hasJump() {
-				fmt.Printf("jump -> %s\n", p.getJump())
-				jumpInBinary, err := t.TranslateJump(p.getJump())
-				f.WriteString(jumpInBinary)
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-				fmt.Printf("jump in binary -> %s\n", jumpInBinary)
-
-			} else {
-				f.WriteString("000")
-			}
-			f.WriteString("\n")
-		}
-	}
-	fmt.Println("Done Parsing")
 }

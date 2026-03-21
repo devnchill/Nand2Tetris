@@ -5,8 +5,8 @@ type SymbolTable struct {
 	table map[string]int
 }
 
-func NewSymbolTable() SymbolTable {
-	return SymbolTable{
+func NewSymbolTable() *SymbolTable {
+	return &SymbolTable{
 		table: map[string]int{
 			"SP":     0,
 			"LCL":    1,
@@ -35,15 +35,15 @@ func NewSymbolTable() SymbolTable {
 	}
 }
 
-func (s SymbolTable) addEntry(symbol string, address int) {
+func (s *SymbolTable) AddEntry(symbol string, address int) {
 	s.table[symbol] = address
 }
 
-func (s SymbolTable) contains(symbol string) bool {
+func (s *SymbolTable) Contains(symbol string) bool {
 	_, ok := s.table[symbol]
 	return ok
 }
 
-func (s SymbolTable) getAddress(symbol string) int {
+func (s *SymbolTable) GetAddress(symbol string) int {
 	return s.table[symbol]
 }
