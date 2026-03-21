@@ -1,6 +1,6 @@
 package parser
 
-func getCommandTypeInString(command TCommandType) string {
+func GetCommandTypeInString(command TCommandType) string {
 	if command == 0 {
 		return "ACommand"
 	}
