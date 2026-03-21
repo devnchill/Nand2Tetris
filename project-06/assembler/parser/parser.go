@@ -65,7 +65,7 @@ func (p *Parser) getCommandType() (TCommandType, error) {
 func (p *Parser) getSymbol(commandType TCommandType) (string, error) {
 	if commandType == ACommand {
 		decimalNumber, err := strconv.Atoi(p.currentCommand[1:])
-		val := fmt.Sprintf("%b", decimalNumber)
+		val := fmt.Sprintf("%016b", decimalNumber)
 		if err != nil {
 			return "", err
 		}
@@ -128,7 +128,7 @@ func (p *Parser) Parse() {
 		}
 		// now we have a valid commadntype
 		fmt.Printf("current Insturction -> %s\n", p.currentCommand)
-		fmt.Printf("commandType ->%d\n", commandType)
+		fmt.Printf("commandType ->%s\n", getCommandTypeInString(commandType))
 		if commandType == ACommand || commandType == LCommand {
 			if binaryVal, err := p.getSymbol(commandType); err != nil {
 				fmt.Println(err)
@@ -148,6 +148,8 @@ func (p *Parser) Parse() {
 					break
 				}
 				fmt.Printf("dest in binary -> %s\n", destInBinary)
+			} else {
+				f.WriteString("000")
 			}
 			fmt.Printf("comp -> %s\n", p.getComp())
 			compInBinary, err := t.TranslateComp(p.getComp())
@@ -162,14 +164,16 @@ func (p *Parser) Parse() {
 				fmt.Printf("jump -> %s\n", p.getJump())
 				jumpInBinary, err := t.TranslateJump(p.getJump())
 				f.WriteString(jumpInBinary)
-				f.WriteString("\n")
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
 				fmt.Printf("jump in binary -> %s\n", jumpInBinary)
 
+			} else {
+				f.WriteString("000")
 			}
+			f.WriteString("\n")
 		}
 	}
 	fmt.Println("Done Parsing")
