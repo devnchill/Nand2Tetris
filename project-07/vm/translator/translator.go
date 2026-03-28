@@ -107,7 +107,85 @@ func (t *Translator) writeArithmeticCommand(command string) {
 	}
 }
 
-func (t *Translator) writePushPopCommand(command string) {
+func (t *Translator) writePushPopCommand(command string, segment string, index int) {
+	var segmentToBase = map[string]string{
+		"local":    "LCL",
+		"argument": "ARG",
+		"this":     "THIS",
+		"that":     "THAT",
+		"temp":     "5",
+		"pointer":  "3",
+	}
+	base := ""
+	if b, ok := segmentToBase[segment]; ok {
+		base = b
+	}
+	useM := ""
+	switch segment {
+	case "local", "this", "that", "argument":
+		{
+			useM = "A=M+D"
+		}
+	case "temp", "pointer":
+		{
+			useM = "A=D+A"
+		}
+	}
+	switch command {
+	case "push":
+		{
+			switch segment {
+			case "constant":
+				{
+					t.writer.WriteString(fmt.Sprintf(`
+					@%d
+					D=A
+					@SP 
+					A=M 
+					M=D
+					@SP 
+					M=M+1
+					`, index))
+				}
+			default:
+				{
+					t.writer.WriteString(fmt.Sprintf(`
+					@%d
+					D=A
+					@%s
+					%s
+					D=M+D 
+					@SP 
+					A=M
+					M=D
+					@SP 
+					M=M+1
+					`, index, base, useM))
+				}
+			}
+		}
+	case "pop":
+		switch segment {
+		case "local", "argument", "this", "that", "temp", "pointer":
+			t.writer.WriteString(fmt.Sprintf(`
+			@%d
+			D=A
+			@%s
+			%s
+			D=A
+			@R13
+			M=D
+			@SP
+			AM=M-1
+			D=M
+			@R13
+			A=M
+			M=D
+			`, index, base, useM))
+		}
+	default:
+		panic("pop not implemented for segment: " + segment)
+	}
 }
 
 func (t *Translator) Close() {
