@@ -36,6 +36,7 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 		panic(err)
 	}
 	defer f.Close()
+	first := true
 	for p.Advance() {
 		commandType, err := p.GetCommandType()
 		if err != nil {
@@ -50,6 +51,11 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 			fmt.Println("Lable found skipping ...")
 			continue
 		}
+
+		if !first {
+			f.WriteString("\n")
+		}
+
 		if commandType == parser.ACommand {
 			symbol, _ := p.GetSymbol(commandType)
 			fmt.Printf("[ symbol ] -> %s\n", symbol)
@@ -65,44 +71,43 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 			}
 			fmt.Printf("[ address ] -> %s\n", strconv.Itoa(address))
 			binaryValue := fmt.Sprintf("%016b", address)
-			f.WriteString(binaryValue + "\n")
+			f.WriteString(binaryValue)
 		} else if commandType == parser.CCommand {
-			f.WriteString("111")
+			var dest, comp, jmp string
 			if p.HasDest() {
 				fmt.Printf("Dest -> %s\n", p.GetDest())
 				destInBinary, err := t.TranslateDest(p.GetDest())
-				f.WriteString(destInBinary)
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
+				dest = destInBinary
 				fmt.Printf("Dest in binary -> %s\n", destInBinary)
 			} else {
-				f.WriteString("000")
+				dest = "000"
 			}
 			fmt.Printf("Comp -> %s\n", p.GetComp())
-			compInBinary, err := t.TranslateComp(p.GetComp())
-			f.WriteString(compInBinary)
+			comp, err := t.TranslateComp(p.GetComp())
 			if err != nil {
 				fmt.Println(err)
 				break
 			}
-			fmt.Printf("Comp in binary -> %s\n", compInBinary)
+			fmt.Printf("Comp in binary -> %s\n", comp)
 
 			if p.HasJump() {
 				fmt.Printf("Jump -> %s\n", p.GetJump())
-				jumpInBinary, err := t.TranslateJump(p.GetJump())
-				f.WriteString(jumpInBinary)
+				jmp, err = t.TranslateJump(p.GetJump())
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
-				fmt.Printf("Jump in binary -> %s\n", jumpInBinary)
+				fmt.Printf("Jump in binary -> %s\n", jmp)
 
 			} else {
-				f.WriteString("000")
+				jmp = "000"
 			}
-			f.WriteString("\n")
+			f.WriteString("111" + comp + dest + jmp)
 		}
+		first = false
 	}
 }

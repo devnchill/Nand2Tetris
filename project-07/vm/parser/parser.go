@@ -36,7 +36,6 @@ type Parser struct {
 func NewParser(file string) *Parser {
 	fp, err := os.Open(file)
 	util.Check(err)
-	defer fp.Close()
 	inputScanner := bufio.NewScanner(fp)
 	return &Parser{
 		filePointer:  fp,
