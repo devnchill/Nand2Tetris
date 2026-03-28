@@ -49,6 +49,9 @@ func (p *Parser) advance() {
 		if line == "" {
 			continue
 		}
+		if idx := strings.Index(line, "\\"); idx != -1 {
+			line = line[:idx]
+		}
 		p.currentCommand = line
 		p.hasMoreCommand = true
 		cmdType, err := p.getCommandType()
@@ -60,7 +63,8 @@ func (p *Parser) advance() {
 }
 
 func (p *Parser) getCommandType() (CommandType, error) {
-	cmd := strings.Split(p.currentCommand, " ")[0]
+	tokens := strings.Fields(p.currentCommand)
+	cmd := tokens[0]
 	switch cmd {
 	case "add":
 	case "sub":
@@ -116,15 +120,19 @@ func (p *Parser) getFirstArg() string {
 	if cmdType == C_ARITHMETIC {
 		return p.currentCommand
 	}
-	return strings.Split(p.currentCommand, " ")[1]
+	return strings.Fields(p.currentCommand)[1]
 }
 
 func (p *Parser) getSecondArg() int {
 	cmdType := p.currentCommandType
 	if cmdType == C_PUSH || cmdType == C_POP || cmdType == C_FUNCTION || cmdType == C_CALL {
-		intVal, err := strconv.Atoi(strings.Split(p.currentCommand, " ")[2])
+		intVal, err := strconv.Atoi(strings.Fields(p.currentCommand)[2])
 		util.Check(err)
 		return intVal
 	}
 	return 0
+}
+
+func (p *Parser) Close() {
+	p.filePointer.Close()
 }
