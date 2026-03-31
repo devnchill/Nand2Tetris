@@ -26,11 +26,9 @@ const (
 type Parser struct {
 	filePointer        *os.File
 	inputScanner       *bufio.Scanner
-	currentCommand     string
-	hasMoreCommand     bool
-	currentCommandType CommandType
-	arg1               string
-	arg2               string
+	CurrentCommand     string
+	HasMoreCommand     bool
+	CurrentCommandType CommandType
 }
 
 func NewParser(file string) *Parser {
@@ -43,7 +41,7 @@ func NewParser(file string) *Parser {
 	}
 }
 
-func (p *Parser) advance() {
+func (p *Parser) Advance() {
 	for p.inputScanner.Scan() {
 		line := strings.TrimSpace(p.inputScanner.Text())
 		if line == "" {
@@ -52,18 +50,18 @@ func (p *Parser) advance() {
 		if idx := strings.Index(line, "\\"); idx != -1 {
 			line = line[:idx]
 		}
-		p.currentCommand = line
-		p.hasMoreCommand = true
+		p.CurrentCommand = line
+		p.HasMoreCommand = true
 		cmdType, err := p.getCommandType()
 		util.Check(err)
-		p.currentCommandType = cmdType
+		p.CurrentCommandType = cmdType
 		return
 	}
-	p.hasMoreCommand = false
+	p.HasMoreCommand = false
 }
 
 func (p *Parser) getCommandType() (CommandType, error) {
-	tokens := strings.Fields(p.currentCommand)
+	tokens := strings.Fields(p.CurrentCommand)
 	cmd := tokens[0]
 	switch cmd {
 	case "add":
@@ -115,18 +113,18 @@ func (p *Parser) getCommandType() (CommandType, error) {
 	return 0, nil
 }
 
-func (p *Parser) getFirstArg() string {
-	cmdType := p.currentCommandType
+func (p *Parser) GetFirstArg() string {
+	cmdType := p.CurrentCommandType
 	if cmdType == C_ARITHMETIC {
-		return p.currentCommand
+		return p.CurrentCommand
 	}
-	return strings.Fields(p.currentCommand)[1]
+	return strings.Fields(p.CurrentCommand)[1]
 }
 
-func (p *Parser) getSecondArg() int {
-	cmdType := p.currentCommandType
+func (p *Parser) GetSecondArg() int {
+	cmdType := p.CurrentCommandType
 	if cmdType == C_PUSH || cmdType == C_POP || cmdType == C_FUNCTION || cmdType == C_CALL {
-		intVal, err := strconv.Atoi(strings.Fields(p.currentCommand)[2])
+		intVal, err := strconv.Atoi(strings.Fields(p.CurrentCommand)[2])
 		util.Check(err)
 		return intVal
 	}

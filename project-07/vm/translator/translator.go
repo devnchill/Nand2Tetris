@@ -25,7 +25,7 @@ func NewTranslator(file string) *Translator {
 
 var labelCounter int
 
-func (t *Translator) writeArithmeticCommand(command string) {
+func (t *Translator) WriteArithmeticCommand(command string) {
 	t.writer.WriteString("//" + command + "\n")
 	switch command {
 	case "add":
@@ -107,7 +107,7 @@ func (t *Translator) writeArithmeticCommand(command string) {
 	}
 }
 
-func (t *Translator) writePushPopCommand(command string, segment string, index int) {
+func (t *Translator) WritePushPopCommand(command string, segment string, index int) {
 	var segmentToBase = map[string]string{
 		"local":    "LCL",
 		"argument": "ARG",
