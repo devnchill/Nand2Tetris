@@ -71,3 +71,11 @@
 - [Test Programs](project-06/test)
 
 </details>
+
+<details>
+  <summary><strong>project-07 — Virtual Machine</strong></summary>
+
+- [VM](project-07/vm/main.go)
+- [Test Programs](project-07/test)
+
+</details>
