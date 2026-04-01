@@ -40,7 +40,7 @@ func main() {
 			{
 				arg1 := p.GetFirstArg()
 				arg2 := p.GetSecondArg()
-				t.WritePushPopCommand(p.CurrentCommand, arg1, arg2)
+				t.WritePushPopCommand(p.CurrentCommand, p.CurrentCommandType, arg1, arg2)
 			}
 		}
 	}

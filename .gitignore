@@ -1,3 +1,4 @@
 **/assembler/build 
+**/vm/build 
 *.hack
 .direnv

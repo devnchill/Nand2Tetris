@@ -3,6 +3,7 @@ package translator
 import (
 	"bufio"
 	"fmt"
+	"nand2tetris/vm/parser"
 	"nand2tetris/vm/util"
 	"os"
 )
@@ -13,9 +14,9 @@ type Translator struct {
 }
 
 func NewTranslator(file string) *Translator {
+	fmt.Printf("Creating new file: %s\n", file)
 	fp, err := os.Create(file)
 	util.Check(err)
-	defer fp.Close()
 	writer := bufio.NewWriter(fp)
 	return &Translator{
 		writer:      writer,
@@ -26,30 +27,24 @@ func NewTranslator(file string) *Translator {
 var labelCounter int
 
 func (t *Translator) WriteArithmeticCommand(command string) {
-	t.writer.WriteString("//" + command + "\n")
+	t.writer.WriteString("\n//" + command + "\n")
 	switch command {
 	case "add":
-		t.writer.WriteString(`
-		@SP
-		AM=M-1
-		D=M
-		A=A-1
-		M=M+D
-		`)
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("AM=M-1\n")
+		t.writer.WriteString("D=M\n")
+		t.writer.WriteString("A=A-1\n")
+		t.writer.WriteString("M=M+D\n")
 	case "sub":
-		t.writer.WriteString(`
-		@SP
-		AM=M-1
-		D=M
-		A=A-1
-		M=M-D
-		`)
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("AM=M-1\n")
+		t.writer.WriteString("D=M\n")
+		t.writer.WriteString("A=A-1\n")
+		t.writer.WriteString("M=M-D\n")
 	case "neg":
-		t.writer.WriteString(`
-		@SP
-		A=M-1
-		M=-M
-		`)
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("A=M-1\n")
+		t.writer.WriteString("M=-M\n")
 	case "eq", "gt", "lt":
 		eqLabel := fmt.Sprintf("EQ_%d", labelCounter)
 		endLabel := fmt.Sprintf("END_%d", labelCounter)
@@ -61,53 +56,51 @@ func (t *Translator) WriteArithmeticCommand(command string) {
 			"lt": "JLT",
 		}[command]
 
-		t.writer.WriteString(fmt.Sprintf(`
-		@SP
-		AM=M-1
-		D=M
-		A=A-1
-		D=M-D
-		@%s
-		D;%s
-		@SP
-		A=M-1
-		M=0
-		@%s
-		0;JMP
-		(%s)
-		@SP
-		A=M-1
-		M=-1
-		(%s)
-		`, eqLabel, jumpCond, endLabel, eqLabel, endLabel))
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("AM=M-1\n")
+		t.writer.WriteString("D=M\n")
+		t.writer.WriteString("A=A-1\n")
+		t.writer.WriteString("D=M-D\n")
+		t.writer.WriteString("@" + eqLabel + "\n")
+		t.writer.WriteString("D;" + jumpCond + "\n")
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("A=M-1\n")
+		t.writer.WriteString("M=0\n")
+		t.writer.WriteString("@" + endLabel + "\n")
+		t.writer.WriteString("0;JMP\n")
+		t.writer.WriteString(eqLabel + "\n")
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("A=M-1\n")
+		t.writer.WriteString("M=-1\n")
+		t.writer.WriteString(endLabel + "\n")
 	case "and":
-		t.writer.WriteString(`
-		@SP
-		AM=M-1
-		D=M
-		A=A-1
-		M=M&D
-		`)
+		{
+			t.writer.WriteString("@SP\n")
+			t.writer.WriteString("AM=M-1\n")
+			t.writer.WriteString("D=M\n")
+			t.writer.WriteString("A=A-1\n")
+			t.writer.WriteString("M=M&D\n")
+		}
 	case "or":
-		t.writer.WriteString(`
-		@SP
-		AM=M-1
-		D=M
-		A=A-1
-		M=M|D
-		`)
+		{
+			t.writer.WriteString("@SP\n")
+			t.writer.WriteString("AM = M - 1\n")
+			t.writer.WriteString("D = M\n")
+			t.writer.WriteString("A = A - 1\n")
+			t.writer.WriteString("M = M | D\n")
+		}
 	case "not":
-		t.writer.WriteString(`
-		@SP
-		A=M-1
-		M=!M
-		`)
+		t.writer.WriteString("@SP\n")
+		t.writer.WriteString("A=M-1\n")
+		t.writer.WriteString("M=!M\n")
 	default:
 		panic(fmt.Sprintf("invalid arithmetic command: %s", command))
 	}
 }
 
-func (t *Translator) WritePushPopCommand(command string, segment string, index int) {
+func (t *Translator) WritePushPopCommand(command string, commandType parser.CommandType, segment string, index int) {
+
+	t.writer.WriteString("\n//" + command + "\n")
 	var segmentToBase = map[string]string{
 		"local":    "LCL",
 		"argument": "ARG",
@@ -131,60 +124,56 @@ func (t *Translator) WritePushPopCommand(command string, segment string, index i
 			useM = "A=D+A"
 		}
 	}
-	switch command {
-	case "push":
+	switch commandType {
+	case parser.C_PUSH:
 		{
 			switch segment {
 			case "constant":
 				{
-					t.writer.WriteString(fmt.Sprintf(`
-					@%d
-					D=A
-					@SP 
-					A=M 
-					M=D
-					@SP 
-					M=M+1
-					`, index))
+					t.writer.WriteString(fmt.Sprintf("@%d", index))
+					t.writer.WriteString("D=A\n")
+					t.writer.WriteString("@SP \n")
+					t.writer.WriteString("A=M \n")
+					t.writer.WriteString("M=D\n")
+					t.writer.WriteString("@SP \n")
+					t.writer.WriteString("M=M+1\n")
 				}
 			default:
 				{
-					t.writer.WriteString(fmt.Sprintf(`
-					@%d
-					D=A
-					@%s
-					%s
-					D=M+D 
-					@SP 
-					A=M
-					M=D
-					@SP 
-					M=M+1
-					`, index, base, useM))
+					t.writer.WriteString(fmt.Sprintf(`@%d\n`, index))
+					t.writer.WriteString("D=A\n")
+					t.writer.WriteString(fmt.Sprintf(`@%s\n`, base))
+					t.writer.WriteString(fmt.Sprintf(`@%s\n`, useM))
+					t.writer.WriteString("D=M+D \n")
+					t.writer.WriteString("@SP \n")
+					t.writer.WriteString("A=M\n")
+					t.writer.WriteString("M=D\n")
+					t.writer.WriteString("@SP \n")
+					t.writer.WriteString("M=M+1\n")
 				}
 			}
 		}
-	case "pop":
+	case parser.C_POP:
 		switch segment {
 		case "local", "argument", "this", "that", "temp", "pointer":
-			t.writer.WriteString(fmt.Sprintf(`
-			@%d
-			D=A
-			@%s
-			%s
-			D=A
-			@R13
-			M=D
-			@SP
-			AM=M-1
-			D=M
-			@R13
-			A=M
-			M=D
-			`, index, base, useM))
+			{
+				t.writer.WriteString(fmt.Sprintf("@%d\n", index))
+				t.writer.WriteString("D=A\n")
+				t.writer.WriteString("@" + base)
+				t.writer.WriteString(useM)
+				t.writer.WriteString("D=A\n")
+				t.writer.WriteString("@R13\n")
+				t.writer.WriteString("M=D\n")
+				t.writer.WriteString("@SP\n")
+				t.writer.WriteString("AM=M-1\n")
+				t.writer.WriteString("D=M\n")
+				t.writer.WriteString("@R13\n")
+				t.writer.WriteString("A=M\n")
+				t.writer.WriteString("M=D\n")
+			}
+		default:
+			panic("pop not implemented for segment: " + segment)
 		}
-	default:
-		panic("pop not implemented for segment: " + segment)
 	}
 }
 

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"nand2tetris/vm/util"
 	"os"
@@ -44,11 +45,11 @@ func NewParser(file string) *Parser {
 func (p *Parser) Advance() {
 	for p.inputScanner.Scan() {
 		line := strings.TrimSpace(p.inputScanner.Text())
+		if idx := strings.Index(line, "//"); idx != -1 {
+			line = line[:idx]
+		}
 		if line == "" {
 			continue
-		}
-		if idx := strings.Index(line, "\\"); idx != -1 {
-			line = line[:idx]
 		}
 		p.CurrentCommand = line
 		p.HasMoreCommand = true
@@ -61,18 +62,11 @@ func (p *Parser) Advance() {
 }
 
 func (p *Parser) getCommandType() (CommandType, error) {
+	fmt.Printf("current command --> %s\n", p.CurrentCommand)
 	tokens := strings.Fields(p.CurrentCommand)
 	cmd := tokens[0]
 	switch cmd {
-	case "add":
-	case "sub":
-	case "neg":
-	case "eq":
-	case "gt":
-	case "lt":
-	case "and":
-	case "or":
-	case "not":
+	case "add", "sub", "neg", "eq", "gt", "lt", "and", "or", "not":
 		{
 			return C_ARITHMETIC, nil
 		}
