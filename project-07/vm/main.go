@@ -2,46 +2,64 @@ package main
 
 import (
 	"fmt"
-	parser "nand2tetris/vm/parser"
-	"nand2tetris/vm/translator"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: vmtranslator <file.vm>")
+		fmt.Println("Usage: vm -f <file.vm ...> -d <directory ...>")
 		os.Exit(1)
 	}
-	file := os.Args[1]
-	if filepath.Ext(file) != ".vm" {
-		fmt.Println("Error: input file must have .vm extension")
-		os.Exit(1)
-	}
-	outFile := filepath.Join(filepath.Dir(file), strings.TrimPrefix(filepath.Base(file), filepath.Ext(file))) + ".asm"
-	p := parser.NewParser(file)
-	t := translator.NewTranslator(outFile)
-	defer p.Close()
-	defer t.Close()
-	for {
-		p.Advance()
+	var fileFlag, dirFlag bool
+	var dirFlagIdx int
 
-		if !p.HasMoreCommand {
+	// NOTE: extract it into a helper function
+	if os.Args[1] == "-f" {
+		fileFlag = true
+		for i := range os.Args[2:] {
+			if os.Args[i] != "-d" {
+				continue
+			}
+			if i == len(os.Args)-1 {
+				fmt.Println("invalid syntax")
+				fmt.Println("no directory provided")
+				fmt.Println("Usage: vm -f <file.vm> -d <directory>")
+				os.Exit(1)
+			}
+			dirFlagIdx = i
+			dirFlag = true
 			break
 		}
+	} else if os.Args[1] == "-d" {
+		fileFlag = false
+		dirFlag = true
+	} else {
+		fmt.Println("invalid syntax")
+		fmt.Println("Usage: vm -f <file.vm> -d <directory>")
+		os.Exit(1)
+	}
+	var files, directories []string
+	if fileFlag && !dirFlag {
+		files = os.Args[2:]
+	} else if !fileFlag && dirFlag {
+		directories = os.Args[2:]
+	} else {
+		// both files and directories are provided
+		files = os.Args[2 : dirFlagIdx-1]
+		directories = os.Args[dirFlagIdx+1:]
+	}
 
-		switch p.CurrentCommandType {
-		case parser.C_ARITHMETIC:
-			{
-				t.WriteArithmeticCommand(p.CurrentCommand)
-			}
-		case parser.C_PUSH, parser.C_POP:
-			{
-				arg1 := p.GetFirstArg()
-				arg2 := p.GetSecondArg()
-				t.WritePushPopCommand(p.CurrentCommand, p.CurrentCommandType, arg1, arg2)
-			}
+	fmt.Println(files)
+	fmt.Println(directories)
+
+	for i := range files {
+		file := files[i]
+		fmt.Println(file)
+		if filepath.Ext(file) != ".vm" {
+			fmt.Println("Error: input file must have .vm extension")
+			os.Exit(1)
 		}
+		generateASM(file)
 	}
 }
