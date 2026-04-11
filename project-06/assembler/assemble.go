@@ -12,11 +12,13 @@ import (
 
 func firstPass(p *parser.Parser, table *symboltable.SymbolTable) {
 	romAddress := 0
+
 	for p.Advance() {
 		commandType, err := p.GetCommandType()
 		if err != nil {
 			panic(err)
 		}
+
 		if commandType == parser.LCommand {
 			symbol, err := p.GetSymbol(commandType)
 			if err != nil {
@@ -28,15 +30,20 @@ func firstPass(p *parser.Parser, table *symboltable.SymbolTable) {
 		}
 	}
 }
+
 func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.Translator) {
 	ramAddress := 16
+
 	fmt.Println("Creating Prog.hack")
+
 	f, err := os.Create("Prog.hack")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
+
 	first := true
+
 	for p.Advance() {
 		commandType, err := p.GetCommandType()
 		if err != nil {
@@ -44,6 +51,7 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 			fmt.Printf("%s was the currentCommand\n", p.CurrentCommand)
 			panic(err)
 		}
+
 		fmt.Printf("Current Instruction -> %s\n", p.CurrentCommand)
 		fmt.Printf("Current Instruction type -> %s\n", parser.GetCommandTypeInString(commandType))
 
@@ -58,7 +66,9 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 
 		if commandType == parser.ACommand {
 			symbol, _ := p.GetSymbol(commandType)
+
 			fmt.Printf("[ symbol ] -> %s\n", symbol)
+
 			var address int
 			if val, err := strconv.Atoi(symbol); err == nil {
 				address = val
@@ -69,25 +79,36 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 				}
 				address = table.GetAddress(symbol)
 			}
+
 			fmt.Printf("[ address ] -> %s\n", strconv.Itoa(address))
+
 			binaryValue := fmt.Sprintf("%016b", address)
 			f.WriteString(binaryValue)
+
 		} else if commandType == parser.CCommand {
+
 			var dest, comp, jmp string
+
 			if p.HasDest() {
-				fmt.Printf("Dest -> %s\n", p.GetDest())
-				destInBinary, err := t.TranslateDest(p.GetDest())
+				de := p.GetDest()
+				fmt.Printf("Dest -> %s\n", de)
+
+				destInBinary, err := t.TranslateDest(de)
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
+
 				dest = destInBinary
 				fmt.Printf("Dest in binary -> %s\n", destInBinary)
+
 			} else {
 				dest = "000"
 			}
-			fmt.Printf("Comp -> %s\n", p.GetComp())
-			comp, err := t.TranslateComp(p.GetComp())
+
+			co := p.GetComp()
+			fmt.Printf("Comp -> %s\n", co)
+			comp, err := t.TranslateComp(co)
 			if err != nil {
 				fmt.Println(err)
 				break
@@ -95,19 +116,23 @@ func secondPass(p *parser.Parser, table *symboltable.SymbolTable, t *translator.
 			fmt.Printf("Comp in binary -> %s\n", comp)
 
 			if p.HasJump() {
-				fmt.Printf("Jump -> %s\n", p.GetJump())
-				jmp, err = t.TranslateJump(p.GetJump())
+				ju := p.GetJump()
+				fmt.Printf("Jump -> %s\n", ju)
+				jmp, err = t.TranslateJump(ju)
 				if err != nil {
 					fmt.Println(err)
 					break
 				}
+
 				fmt.Printf("Jump in binary -> %s\n", jmp)
 
 			} else {
 				jmp = "000"
 			}
+
 			f.WriteString("111" + comp + dest + jmp)
 		}
+
 		first = false
 	}
 }
