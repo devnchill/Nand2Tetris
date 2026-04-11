@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -53,8 +54,22 @@ func main() {
 	fmt.Println(files)
 	fmt.Println(directories)
 
-	for i := range files {
-		file := files[i]
+	for _, dir := range directories {
+		err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && filepath.Ext(path) == ".vm" {
+				files = append(files, path)
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Printf("Error reading directory: %s", dir)
+		}
+	}
+
+	for _, file := range files {
 		fmt.Println(file)
 		if filepath.Ext(file) != ".vm" {
 			fmt.Println("Error: input file must have .vm extension")
