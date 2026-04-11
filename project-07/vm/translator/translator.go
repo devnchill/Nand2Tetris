@@ -117,7 +117,7 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 	switch segment {
 	case "local", "this", "that", "argument":
 		{
-			useM = "A=M+D"
+			useM = "A=D+M"
 		}
 	case "temp", "pointer":
 		{
@@ -132,10 +132,10 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 				{
 					t.writer.WriteString(fmt.Sprintf("@%d", index))
 					t.writer.WriteString("D=A\n")
-					t.writer.WriteString("@SP \n")
-					t.writer.WriteString("A=M \n")
+					t.writer.WriteString("@SP\n")
+					t.writer.WriteString("A=M\n")
 					t.writer.WriteString("M=D\n")
-					t.writer.WriteString("@SP \n")
+					t.writer.WriteString("@SP\n")
 					t.writer.WriteString("M=M+1\n")
 				}
 			default:
@@ -143,12 +143,12 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 					t.writer.WriteString(fmt.Sprintf(`@%d\n`, index))
 					t.writer.WriteString("D=A\n")
 					t.writer.WriteString(fmt.Sprintf(`@%s\n`, base))
-					t.writer.WriteString(fmt.Sprintf(`@%s\n`, useM))
-					t.writer.WriteString("D=M+D \n")
-					t.writer.WriteString("@SP \n")
+					t.writer.WriteString(fmt.Sprintf(`%s\n`, useM))
+					t.writer.WriteString("D=M\n")
+					t.writer.WriteString("@SP\n")
 					t.writer.WriteString("A=M\n")
 					t.writer.WriteString("M=D\n")
-					t.writer.WriteString("@SP \n")
+					t.writer.WriteString("@SP\n")
 					t.writer.WriteString("M=M+1\n")
 				}
 			}
@@ -159,8 +159,8 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 			{
 				t.writer.WriteString(fmt.Sprintf("@%d\n", index))
 				t.writer.WriteString("D=A\n")
-				t.writer.WriteString("@" + base)
-				t.writer.WriteString(useM)
+				t.writer.WriteString("@" + base + "\n")
+				t.writer.WriteString(useM + "\n")
 				t.writer.WriteString("D=A\n")
 				t.writer.WriteString("@R13\n")
 				t.writer.WriteString("M=D\n")
