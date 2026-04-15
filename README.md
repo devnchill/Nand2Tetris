@@ -73,9 +73,17 @@
 </details>
 
 <details>
-  <summary><strong>project-07 — Virtual Machine</strong></summary>
+  <summary><strong>project-07 — Virtual Machine I</strong></summary>
 
 - [VM](project-07/vm/main.go)
 - [Test Programs](project-07/test)
+
+</details>
+
+<details>
+  <summary><strong>project-08 — Virtual Machine II </strong></summary>
+
+- [VM](project-08/vm/main.go)
+- [Test Programs](project-08/test)
 
 </details>
