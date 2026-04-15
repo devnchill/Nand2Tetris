@@ -3,14 +3,17 @@ package translator
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"nand2tetris/vm/parser"
 	"nand2tetris/vm/util"
 	"os"
+	"strings"
 )
 
 type Translator struct {
-	filePointer *os.File
-	writer      *bufio.Writer
+	filePointer     *os.File
+	writer          *bufio.Writer
+	currentFunction string
 }
 
 func NewTranslator(file string) *Translator {
@@ -25,6 +28,14 @@ func NewTranslator(file string) *Translator {
 }
 
 var labelCounter int
+
+func (t *Translator) WriteInit() {
+	t.writer.WriteString("@256")
+	t.writer.WriteString("D=A")
+	t.writer.WriteString("@SP")
+	t.writer.WriteString("M=D")
+	//TODO: generate asm for call Sys.Init
+}
 
 func (t *Translator) WriteArithmeticCommand(command string) {
 	t.writer.WriteString("\n//" + command + "\n")
@@ -175,6 +186,31 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 			panic("pop not implemented for segment: " + segment)
 		}
 	}
+}
+
+func (t *Translator) WriteLabel(label string) {
+	if t.currentFunction == "" {
+		log.Fatal("no current function found")
+		return
+	}
+	t.writer.WriteString("(" + t.currentFunction + "$" + label + ")" + "\n")
+}
+func (t *Translator) WriteGoto(dest string) {
+	if t.currentFunction == "" {
+		log.Fatal("no current function found")
+		return
+	}
+	t.writer.WriteString("@" + t.currentFunction + "$" + dest + "\n")
+	t.writer.WriteString("0;JMP\n")
+}
+
+func (t *Translator) WriteIf(label string) {
+	label = t.currentFunction + "$" + label
+	t.writer.WriteString("@SP\n")
+	t.writer.WriteString("AM=M-1\n")
+	t.writer.WriteString("D=M\n")
+	t.writer.WriteString("@" + label + "\n")
+	t.writer.WriteString("D;JNE\n")
 }
 
 func (t *Translator) Close() {
