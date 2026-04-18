@@ -29,9 +29,9 @@ func (t *Translator) writeCall(funcName string, numArgs int) {
 	// set ARG
 	t.writer.WriteString("@SP\n")
 	t.writer.WriteString("D=M\n")
-	t.writer.WriteString("@5\n")
-	t.writer.WriteString("D=D-A\n")
 	t.writer.WriteString("@" + strconv.Itoa(numArgs) + "\n")
+	t.writer.WriteString("D=D-A\n")
+	t.writer.WriteString("@5\n")
 	t.writer.WriteString("D=D-A\n")
 	t.writer.WriteString("@ARG\n")
 	t.writer.WriteString("M=D\n")
@@ -45,4 +45,7 @@ func (t *Translator) writeCall(funcName string, numArgs int) {
 	// goto f
 	t.writer.WriteString("@" + funcName + "\n")
 	t.writer.WriteString("0;JMP\n")
+
+	// write label
+	t.writer.WriteString("(" + retLabel + ")" + "\n")
 }
