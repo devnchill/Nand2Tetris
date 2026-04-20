@@ -20,7 +20,6 @@ func (t *Translator) writeCall(funcName string, numArgs int) {
 	t.writer.WriteString("@SP\n")
 	t.writer.WriteString("M=M+1\n")
 
-	// push LCL
 	t.pushSymbol("LCL")
 	t.pushSymbol("ARG")
 	t.pushSymbol("THIS")
