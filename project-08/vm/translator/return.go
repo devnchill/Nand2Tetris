@@ -1,6 +1,6 @@
 package translator
 
-func (t *Translator) writeReturn() {
+func (t *Translator) WriteReturn() {
 	// FRAME = LCL
 	t.writer.WriteString("@LCL\n")
 	t.writer.WriteString("D=M\n")

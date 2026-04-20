@@ -12,7 +12,7 @@ func (t *Translator) pushZeroKTimes(n int) {
 	}
 }
 
-func (t *Translator) writeFunction(funName string, numLocalVars int) {
+func (t *Translator) WriteFunction(funName string, numLocalVars int) {
 	t.writer.WriteString("(" + funName + ")" + "\n")
 	t.pushZeroKTimes(numLocalVars)
 }

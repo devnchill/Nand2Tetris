@@ -14,7 +14,7 @@ const (
 	C_POP
 	C_LABEL
 	C_GOTO
-	C_IF
+	C_IF_GOTO
 	C_FUNCTION
 	C_RETURN
 	C_CALL
@@ -59,7 +59,7 @@ func (p *Parser) getCommandType() (CommandType, error) {
 		}
 	case "if-goto":
 		{
-			return C_IF, nil
+			return C_IF_GOTO, nil
 		}
 	}
 	log.Fatal("error determining command type")

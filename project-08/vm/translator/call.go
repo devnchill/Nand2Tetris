@@ -9,7 +9,7 @@ func (t *Translator) generateLabelForFunc() string {
 	return t.currentFunction + "$" + "ret" + strconv.Itoa(returnLineGenerator)
 }
 
-func (t *Translator) writeCall(funcName string, numArgs int) {
+func (t *Translator) WriteCall(funcName string, numArgs int) {
 	// push label for current func address/line no
 	retLabel := t.generateLabelForFunc()
 	t.writer.WriteString("@" + retLabel + "\n")
