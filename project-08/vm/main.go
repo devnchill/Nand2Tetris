@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	parser "nand2tetris/vm/parser"
+	"nand2tetris/vm/translator"
 	"os"
 )
 
@@ -28,8 +30,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	outFile := "Prog.asm"
+	t := translator.NewTranslator(outFile)
 	for _, file := range files {
+
+		p := parser.NewParser(file)
+
+		defer p.Close()
+		defer t.Close()
+
 		fmt.Println(file)
-		generateASM(file)
+
+		generateASM(p, t)
 	}
 }
