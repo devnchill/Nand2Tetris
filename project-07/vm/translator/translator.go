@@ -6,6 +6,7 @@ import (
 	"nand2tetris/vm/parser"
 	"nand2tetris/vm/util"
 	"os"
+	"strconv"
 )
 
 type Translator struct {
@@ -98,7 +99,7 @@ func (t *Translator) WriteArithmeticCommand(command string) {
 	}
 }
 
-func (t *Translator) WritePushPopCommand(command string, commandType parser.CommandType, segment string, index int) {
+func (t *Translator) WritePushPopCommand(command string, commandType parser.CommandType, segment string, index int, vmFileName string) {
 
 	t.writer.WriteString("\n//" + command + "\n")
 	var segmentToBase = map[string]string{
@@ -130,8 +131,18 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 			switch segment {
 			case "constant":
 				{
-					t.writer.WriteString(fmt.Sprintf("@%d", index))
+					fmt.Fprintf(t.writer, "@%d\n", index)
 					t.writer.WriteString("D=A\n")
+					t.writer.WriteString("@SP\n")
+					t.writer.WriteString("A=M\n")
+					t.writer.WriteString("M=D\n")
+					t.writer.WriteString("@SP\n")
+					t.writer.WriteString("M=M+1\n")
+				}
+			case "static":
+				{
+					t.writer.WriteString("@" + vmFileName + "." + strconv.Itoa(index) + "\n")
+					t.writer.WriteString("D=M\n")
 					t.writer.WriteString("@SP\n")
 					t.writer.WriteString("A=M\n")
 					t.writer.WriteString("M=D\n")
@@ -140,10 +151,10 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 				}
 			default:
 				{
-					t.writer.WriteString(fmt.Sprintf(`@%d\n`, index))
+					fmt.Fprintf(t.writer, "@%d\n", index)
 					t.writer.WriteString("D=A\n")
-					t.writer.WriteString(fmt.Sprintf(`@%s\n`, base))
-					t.writer.WriteString(fmt.Sprintf(`%s\n`, useM))
+					fmt.Fprintf(t.writer, "@%s\n", base)
+					fmt.Fprintf(t.writer, "@%s\n", useM)
 					t.writer.WriteString("D=M\n")
 					t.writer.WriteString("@SP\n")
 					t.writer.WriteString("A=M\n")
@@ -157,7 +168,7 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 		switch segment {
 		case "local", "argument", "this", "that", "temp", "pointer":
 			{
-				t.writer.WriteString(fmt.Sprintf("@%d\n", index))
+				fmt.Fprintf(t.writer, "@%d\n", index)
 				t.writer.WriteString("D=A\n")
 				t.writer.WriteString("@" + base + "\n")
 				t.writer.WriteString(useM + "\n")
@@ -169,6 +180,14 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 				t.writer.WriteString("D=M\n")
 				t.writer.WriteString("@R13\n")
 				t.writer.WriteString("A=M\n")
+				t.writer.WriteString("M=D\n")
+			}
+		case "pop":
+			{
+				t.writer.WriteString("@SP\n")
+				t.writer.WriteString("AM=M-1\n")
+				t.writer.WriteString("D=M\n")
+				fmt.Fprintf(t.writer, "@%s.%d", vmFileName, index)
 				t.writer.WriteString("M=D\n")
 			}
 		default:
