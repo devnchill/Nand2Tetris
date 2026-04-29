@@ -14,8 +14,8 @@ func main() {
 	}
 
 	files, directories := parseArgs(os.Args)
-	fmt.Println(files)
-	fmt.Println(directories)
+	fmt.Println("filse ->", files)
+	fmt.Println("directories ->", directories)
 
 	dirFiles, err := collectVMFiles(directories)
 	if err != nil {
@@ -32,12 +32,11 @@ func main() {
 
 	outFile := "Prog.asm"
 	t := translator.NewTranslator(outFile)
+	defer t.Close()
 	for _, file := range files {
 
 		p := parser.NewParser(file)
-
 		defer p.Close()
-		defer t.Close()
 
 		fmt.Println(file)
 

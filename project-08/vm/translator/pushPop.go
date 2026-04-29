@@ -3,6 +3,7 @@ package translator
 import (
 	"fmt"
 	"nand2tetris/vm/parser"
+	"strconv"
 )
 
 func (t *Translator) WritePushPopCommand(command string, commandType parser.CommandType, segment string, index int, vmFileName string) {

@@ -182,7 +182,7 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 				t.writer.WriteString("A=M\n")
 				t.writer.WriteString("M=D\n")
 			}
-		case "pop":
+		case "static":
 			{
 				t.writer.WriteString("@SP\n")
 				t.writer.WriteString("AM=M-1\n")

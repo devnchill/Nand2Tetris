@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	parser "nand2tetris/vm/parser"
+	"nand2tetris/vm/translator"
 	"os"
 )
 
@@ -12,8 +14,8 @@ func main() {
 	}
 
 	files, directories := parseArgs(os.Args)
-	fmt.Println(files)
-	fmt.Println(directories)
+	fmt.Println("files ->", files)
+	fmt.Println("directories ->", directories)
 
 	dirFiles, err := collectVMFiles(directories)
 	if err != nil {
@@ -28,8 +30,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	outFile := "Prog.asm"
+	t := translator.NewTranslator(outFile)
+	defer t.Close()
 	for _, file := range files {
+
+		p := parser.NewParser(file)
+		defer p.Close()
+
 		fmt.Println(file)
-		generateASM(file)
+
+		generateASM(p, t, file)
 	}
 }
