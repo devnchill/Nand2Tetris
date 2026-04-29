@@ -41,6 +41,6 @@ func main() {
 
 		fmt.Println(file)
 
-		generateASM(p, t)
+		generateASM(p, t, file)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"nand2tetris/vm/translator"
 )
 
-func generateASM(p *parser.Parser, t *translator.Translator) {
+func generateASM(p *parser.Parser, t *translator.Translator, file string) {
 	for {
 		p.Advance()
 
@@ -22,7 +22,7 @@ func generateASM(p *parser.Parser, t *translator.Translator) {
 			{
 				arg1 := p.GetFirstArg()
 				arg2 := p.GetSecondArg()
-				t.WritePushPopCommand(p.CurrentCommand, p.CurrentCommandType, arg1, arg2)
+				t.WritePushPopCommand(p.CurrentCommand, p.CurrentCommandType, arg1, arg2, file)
 			}
 		case parser.C_LABEL:
 			{
