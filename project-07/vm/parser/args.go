@@ -15,7 +15,7 @@ func (p *Parser) GetFirstArg() string {
 	return strings.Fields(p.CurrentCommand)[1]
 }
 
-// should not be called for push,pop,function and call
+// should be called only for push,pop,function and call
 func (p *Parser) GetSecondArg() int {
 	cmdType := p.CurrentCommandType
 	if cmdType == C_PUSH || cmdType == C_POP || cmdType == C_FUNCTION || cmdType == C_CALL {

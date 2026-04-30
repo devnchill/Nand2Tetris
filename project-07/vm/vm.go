@@ -3,6 +3,7 @@ package main
 import (
 	parser "nand2tetris/vm/parser"
 	"nand2tetris/vm/translator"
+	"path"
 )
 
 func generateASM(p *parser.Parser, t *translator.Translator, file string) {
@@ -23,7 +24,8 @@ func generateASM(p *parser.Parser, t *translator.Translator, file string) {
 			{
 				arg1 := p.GetFirstArg()
 				arg2 := p.GetSecondArg()
-				t.WritePushPopCommand(p.CurrentCommand, p.CurrentCommandType, arg1, arg2, file)
+				fileName := path.Base(file)
+				t.WritePushPopCommand(p.CurrentCommand, p.CurrentCommandType, arg1, arg2, fileName)
 			}
 		}
 	}

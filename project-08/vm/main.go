@@ -5,6 +5,7 @@ import (
 	parser "nand2tetris/vm/parser"
 	"nand2tetris/vm/translator"
 	"os"
+	"path"
 )
 
 func main() {
@@ -38,8 +39,9 @@ func main() {
 		p := parser.NewParser(file)
 		defer p.Close()
 
-		fmt.Println(file)
+		fmt.Println("translating file ->", file)
+		fileName := path.Base(file)
 
-		generateASM(p, t, file)
+		generateASM(p, t, fileName)
 	}
 }
