@@ -15,7 +15,7 @@ func main() {
 	}
 
 	files, directories := parseArgs(os.Args)
-	fmt.Println("filse ->", files)
+	fmt.Println("files ->", files)
 	fmt.Println("directories ->", directories)
 
 	dirFiles, err := collectVMFiles(directories)
