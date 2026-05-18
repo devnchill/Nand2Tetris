@@ -5,5 +5,5 @@ func (t *Translator) WriteInit() {
 	t.writer.WriteString("D=A")
 	t.writer.WriteString("@SP")
 	t.writer.WriteString("M=D")
-	//TODO: generate asm for call Sys.Init
+	t.WriteCall("Sys.init", 0)
 }

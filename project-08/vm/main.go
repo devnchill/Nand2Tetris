@@ -34,6 +34,8 @@ func main() {
 	outFile := "Prog.asm"
 	t := translator.NewTranslator(outFile)
 	defer t.Close()
+
+	t.WriteInit()
 	for _, file := range files {
 
 		p := parser.NewParser(file)
