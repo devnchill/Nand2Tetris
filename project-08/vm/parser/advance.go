@@ -9,7 +9,7 @@ func (p *Parser) Advance() {
 	for p.inputScanner.Scan() {
 		line := strings.TrimSpace(p.inputScanner.Text())
 		if idx := strings.Index(line, "//"); idx != -1 {
-			line = line[:idx]
+			line = strings.TrimSpace(line[:idx])
 		}
 		if line == "" {
 			continue

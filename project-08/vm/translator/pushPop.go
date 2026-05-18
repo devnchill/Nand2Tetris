@@ -7,7 +7,7 @@ import (
 )
 
 func (t *Translator) WritePushPopCommand(command string, commandType parser.CommandType, segment string, index int, vmFileName string) {
-	t.writer.WriteString("\n" + command + "\n")
+	t.writer.WriteString("\n//" + command + "\n")
 	segmentToSymbol := map[string]string{
 		"local":    "LCL",
 		"argument": "ARG",
@@ -87,7 +87,7 @@ func (t *Translator) WritePushPopCommand(command string, commandType parser.Comm
 					t.popD()
 
 					// grab bases addr + index from R13 and set value of that address to value stored in data register
-					t.writer.WriteString("@R!3\n")
+					t.writer.WriteString("@R13\n")
 					t.writer.WriteString("A=M\n")
 					t.writer.WriteString("M=D\n")
 				}
