@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func collectVMFiles(directories []string) ([]string, error) {
+func CollectVMFiles(directories []string) ([]string, error) {
 	var files []string
 
 	for _, dir := range directories {
@@ -28,7 +28,7 @@ func collectVMFiles(directories []string) ([]string, error) {
 	return files, nil
 }
 
-func validateVMFiles(files []string) error {
+func ValidateVMFiles(files []string) error {
 	for _, file := range files {
 		if filepath.Ext(file) != ".vm" {
 			return fmt.Errorf("invalid file: %s (must be .vm)", file)

@@ -1,11 +1,11 @@
-package main
+package util
 
 import (
 	"fmt"
 	"os"
 )
 
-func parseArgs(args []string) ([]string, []string) {
+func ParseArgs(args []string) ([]string, []string) {
 	if len(args) < 2 {
 		fmt.Println("Usage: vm -f <file.vm ...> -d <directory ...>")
 		os.Exit(1)
