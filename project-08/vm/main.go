@@ -36,7 +36,9 @@ func main() {
 	t := translator.NewTranslator(outFile)
 	defer t.Close()
 
-	t.WriteInit()
+	if needsBootstrap(files) {
+		t.WriteInit()
+	}
 	for _, file := range files {
 
 		p := parser.NewParser(file)
