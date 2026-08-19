@@ -56,11 +56,11 @@ func (l *Lexer) skipComments() int {
 			pointer would be at first '/' everytime this is called
 	*/
 	// move cursor to second `/`
-	curr := l.pointer + 1
-	for curr < len(l.source) && l.source[curr] != '\n' {
-		curr++
+	currPointer := l.pointer + 1
+	for currPointer < len(l.source) && l.source[currPointer] != '\n' {
+		currPointer++
 	}
-	return curr
+	return currPointer
 }
 
 func (l *Lexer) peek() byte {
