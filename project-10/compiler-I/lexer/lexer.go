@@ -3,6 +3,7 @@ package lexer
 import (
 	"log"
 	"os"
+	"strings"
 )
 
 type Lexer struct {
@@ -41,12 +42,33 @@ func (l *Lexer) HasMoreTokens() bool {
 	return currPointer < len(l.source)
 }
 
+// only to be called if HasMoreTokens is true
 func (l *Lexer) Advance() {
-	for l.pointer < len(l.source) && l.isWhiteSpace(l.source[l.pointer]) {
-		l.pointer++
+	for {
+		for l.pointer < len(l.source) && l.isWhiteSpace(l.source[l.pointer]) {
+			l.pointer++
+		}
+		if l.source[l.pointer] == '/' && l.source[l.pointer+1] == '/' {
+			l.pointer = l.skipComments()
+		} else {
+			break
+		}
 	}
-	if l.source[l.pointer] == '/' && l.source[l.pointer+1] == '/' {
-		l.pointer = l.skipComments()
+	var sb strings.Builder
+	if l.source[l.pointer] == '"' {
+		for l.pointer < len(l.source) && l.source[l.pointer] != '"' {
+			sb.WriteByte(l.source[l.pointer])
+			l.pointer++
+		}
+		l.currentToken.Lexeme = sb.String()
+		l.currentToken.Type = StringConstant
+	} else if l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9' {
+		for l.pointer < len(l.source) && l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9' {
+			sb.WriteByte(l.source[l.pointer])
+			l.pointer++
+		}
+		l.currentToken.Lexeme = sb.String()
+		l.currentToken.Type = IntegerConstant
 	}
 }
 
@@ -63,14 +85,8 @@ func (l *Lexer) skipComments() int {
 	return currPointer
 }
 
-func (l *Lexer) peek() byte {
-	if l.pointer+1 >= len(l.source) {
-		return 0
-	}
-	return l.source[l.pointer+1]
-}
-
-func (l *Lexer) GetTokenType() {
+func (l *Lexer) GetTokenType() TokenType {
+	return l.currentToken.Type
 }
 
 func (l *Lexer) GetKeyword() {

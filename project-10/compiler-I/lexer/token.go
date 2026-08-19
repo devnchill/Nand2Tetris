@@ -18,7 +18,7 @@ const (
 var keywords = map[string]bool{
 	"class":       true,
 	"constructor": true,
-	"funciton":    true,
+	"function":    true,
 	"method":      true,
 	"field":       true,
 	"static":      true,
@@ -57,5 +57,5 @@ var symbols = map[byte]bool{
 	'<': true,
 	'>': true,
 	'=': true,
-	'_': true,
+	'~': true,
 }
