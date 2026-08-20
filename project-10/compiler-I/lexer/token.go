@@ -1,8 +1,8 @@
 package lexer
 
 type Token struct {
-	Type   TokenType
-	Lexeme string
+	tokenType TokenType
+	lexeme    string
 }
 
 type TokenType int

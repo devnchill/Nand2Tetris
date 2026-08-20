@@ -56,20 +56,45 @@ func (l *Lexer) Advance() {
 	}
 	var sb strings.Builder
 	if l.source[l.pointer] == '"' {
+		l.pointer++
 		for l.pointer < len(l.source) && l.source[l.pointer] != '"' {
 			sb.WriteByte(l.source[l.pointer])
 			l.pointer++
 		}
-		l.currentToken.Lexeme = sb.String()
-		l.currentToken.Type = StringConstant
+		l.pointer++
+		l.currentToken.tokenType = StringConstant
 	} else if l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9' {
 		for l.pointer < len(l.source) && l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9' {
 			sb.WriteByte(l.source[l.pointer])
 			l.pointer++
 		}
-		l.currentToken.Lexeme = sb.String()
-		l.currentToken.Type = IntegerConstant
+		l.currentToken.tokenType = IntegerConstant
+	} else if symbols[l.source[l.pointer]] {
+		l.currentToken.tokenType = Symbol
+		sb.WriteByte(l.source[l.pointer])
+	} else if l.isUnderScore() || l.isAlphabet() {
+		for l.isDigit() || l.isAlphabet() || l.isUnderScore() {
+			sb.WriteByte(l.source[l.pointer])
+			l.pointer++
+		}
+		if keywords[sb.String()] {
+			l.currentToken.tokenType = Keyword
+		} else {
+			l.currentToken.tokenType = Identifier
+		}
 	}
+	l.currentToken.lexeme = sb.String()
+}
+
+func (l *Lexer) isAlphabet() bool {
+	return (l.source[l.pointer] >= 'a' && l.source[l.pointer] <= 'z') || (l.source[l.pointer] >= 'A' && l.source[l.pointer] <= 'Z')
+}
+
+func (l *Lexer) isDigit() bool {
+	return l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9'
+}
+func (l *Lexer) isUnderScore() bool {
+	return l.source[l.pointer] == '_'
 }
 
 func (l *Lexer) skipComments() int {
@@ -82,11 +107,15 @@ func (l *Lexer) skipComments() int {
 	for currPointer < len(l.source) && l.source[currPointer] != '\n' {
 		currPointer++
 	}
+	if len(l.source)-currPointer >= 2 {
+		// skip '\n'
+		currPointer += 2
+	}
 	return currPointer
 }
 
 func (l *Lexer) GetTokenType() TokenType {
-	return l.currentToken.Type
+	return l.currentToken.tokenType
 }
 
 func (l *Lexer) GetKeyword() {
