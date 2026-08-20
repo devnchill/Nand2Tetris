@@ -3,6 +3,7 @@ package lexer
 import (
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -118,17 +119,34 @@ func (l *Lexer) GetTokenType() TokenType {
 	return l.currentToken.tokenType
 }
 
-func (l *Lexer) GetKeyword() {
+/* below methods would read `currentToken` stored in Lexer
+   and perform operations on that to extract desired token
+*/
+
+func (l *Lexer) GetKeyword() string {
+	return l.currentToken.lexeme
 }
 
-func (l *Lexer) GetSymbol() {
+func (l *Lexer) GetSymbol() byte {
+	return l.currentToken.lexeme[0]
 }
 
-func (l *Lexer) GetIdentifier() {
+func (l *Lexer) GetIdentifier() string {
+	return l.currentToken.lexeme
 }
 
-func (l *Lexer) GetIntVal() {
+func (l *Lexer) GetIntVal() int {
+	/* technically it shouldn't throw error
+	reason being, we only append byte to lexeme if byte is a digit
+	*/
+
+	val, err := strconv.Atoi(l.currentToken.lexeme)
+	if err != nil {
+		log.Panicf("invalid lexeme -> %s for tokenType -> %d", l.currentToken.lexeme, l.currentToken.tokenType)
+	}
+	return val
 }
 
-func (l *Lexer) GetStringVal() {
+func (l *Lexer) GetStringVal() string {
+	return l.currentToken.lexeme
 }
