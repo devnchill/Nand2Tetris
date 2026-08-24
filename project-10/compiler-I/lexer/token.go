@@ -48,6 +48,7 @@ var symbols = map[byte]bool{
 	']': true,
 	'.': true,
 	',': true,
+	';': true,
 	'+': true,
 	'-': true,
 	'*': true,

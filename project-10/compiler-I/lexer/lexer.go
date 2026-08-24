@@ -29,16 +29,23 @@ func (l *Lexer) isWhiteSpace(char byte) bool {
 	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
 }
 
+var count int
+
 func (l *Lexer) HasMoreTokens() bool {
+	count++
 	currPointer := l.pointer
-	for currPointer < len(l.source) && l.isWhiteSpace(l.source[currPointer]) {
-		currPointer++
-	}
-	if currPointer == len(l.source) {
-		return false
-	}
-	if l.source[currPointer] == '/' && currPointer+1 < len(l.source) && l.source[currPointer+1] == '/' {
-		currPointer = l.skipComments()
+	for {
+		for currPointer < len(l.source) && l.isWhiteSpace(l.source[currPointer]) {
+			currPointer++
+		}
+		if currPointer == len(l.source) {
+			return false
+		}
+		if l.source[currPointer] == '/' && currPointer+1 < len(l.source) && l.source[currPointer+1] == '/' {
+			currPointer = l.skipComments(currPointer)
+		} else {
+			break
+		}
 	}
 	return currPointer < len(l.source)
 }
@@ -50,7 +57,7 @@ func (l *Lexer) Advance() {
 			l.pointer++
 		}
 		if l.source[l.pointer] == '/' && l.source[l.pointer+1] == '/' {
-			l.pointer = l.skipComments()
+			l.pointer = l.skipComments(l.pointer)
 		} else {
 			break
 		}
@@ -64,8 +71,8 @@ func (l *Lexer) Advance() {
 		}
 		l.pointer++
 		l.currentToken.tokenType = StringConstant
-	} else if l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9' {
-		for l.pointer < len(l.source) && l.source[l.pointer] >= '0' && l.source[l.pointer] <= '9' {
+	} else if l.isDigit() {
+		for l.pointer < len(l.source) && l.isDigit() {
 			sb.WriteByte(l.source[l.pointer])
 			l.pointer++
 		}
@@ -73,6 +80,7 @@ func (l *Lexer) Advance() {
 	} else if symbols[l.source[l.pointer]] {
 		l.currentToken.tokenType = Symbol
 		sb.WriteByte(l.source[l.pointer])
+		l.pointer++
 	} else if l.isUnderScore() || l.isAlphabet() {
 		for l.isDigit() || l.isAlphabet() || l.isUnderScore() {
 			sb.WriteByte(l.source[l.pointer])
@@ -98,19 +106,18 @@ func (l *Lexer) isUnderScore() bool {
 	return l.source[l.pointer] == '_'
 }
 
-func (l *Lexer) skipComments() int {
+func (l *Lexer) skipComments(currPointer int) int {
 	/*
 		 only call when we know it is a comment
 			pointer would be at first '/' everytime this is called
 	*/
 	// move cursor to second `/`
-	currPointer := l.pointer + 1
 	for currPointer < len(l.source) && l.source[currPointer] != '\n' {
 		currPointer++
 	}
 	if len(l.source)-currPointer >= 2 {
 		// skip '\n'
-		currPointer += 2
+		currPointer += 1
 	}
 	return currPointer
 }
