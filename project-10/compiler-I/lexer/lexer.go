@@ -29,10 +29,7 @@ func (l *Lexer) isWhiteSpace(char byte) bool {
 	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
 }
 
-var count int
-
 func (l *Lexer) HasMoreTokens() bool {
-	count++
 	currPointer := l.pointer
 	for {
 		for currPointer < len(l.source) && l.isWhiteSpace(l.source[currPointer]) {
@@ -41,8 +38,13 @@ func (l *Lexer) HasMoreTokens() bool {
 		if currPointer == len(l.source) {
 			return false
 		}
-		if l.source[currPointer] == '/' && currPointer+1 < len(l.source) && l.source[currPointer+1] == '/' {
-			currPointer = l.skipComments(currPointer)
+		if l.source[currPointer] == '/' && currPointer+1 < len(l.source) && (l.source[currPointer+1] == '*' || l.source[currPointer+1] == '/') {
+			switch l.source[currPointer+1] {
+			case '/':
+				currPointer = l.skipComments(currPointer, false)
+			case '*':
+				currPointer = l.skipComments(currPointer, true)
+			}
 		} else {
 			break
 		}
@@ -56,8 +58,13 @@ func (l *Lexer) Advance() {
 		for l.pointer < len(l.source) && l.isWhiteSpace(l.source[l.pointer]) {
 			l.pointer++
 		}
-		if l.source[l.pointer] == '/' && l.source[l.pointer+1] == '/' {
-			l.pointer = l.skipComments(l.pointer)
+		if l.source[l.pointer] == '/' && (l.source[l.pointer+1] == '/' || l.source[l.pointer+1] == '*') {
+			switch l.source[l.pointer+1] {
+			case '/':
+				l.pointer = l.skipComments(l.pointer, false)
+			case '*':
+				l.pointer = l.skipComments(l.pointer, true)
+			}
 		} else {
 			break
 		}
@@ -106,20 +113,32 @@ func (l *Lexer) isUnderScore() bool {
 	return l.source[l.pointer] == '_'
 }
 
-func (l *Lexer) skipComments(currPointer int) int {
+func (l *Lexer) skipComments(currPointer int, isMultilineComment bool) int {
 	/*
 		 only call when we know it is a comment
 			pointer would be at first '/' everytime this is called
 	*/
-	// move cursor to second `/`
-	for currPointer < len(l.source) && l.source[currPointer] != '\n' {
-		currPointer++
-	}
-	if len(l.source)-currPointer >= 2 {
-		// skip '\n'
-		currPointer += 1
+	if !isMultilineComment {
+		// move cursor to second `/`
+		for currPointer < len(l.source) && l.source[currPointer] != '\n' {
+			currPointer++
+		}
+		if len(l.source)-currPointer >= 2 {
+			// skip '\n'
+			currPointer += 1
+		}
+	} else {
+		// move cursor to second `*`
+		for currPointer+1 < len(l.source) && !(l.source[currPointer] == '*' && l.source[currPointer+1] == '/') {
+			currPointer++
+		}
+		currPointer += 2
 	}
 	return currPointer
+}
+
+func (l *Lexer) GetLexeme() string {
+	return l.currentToken.lexeme
 }
 
 func (l *Lexer) GetTokenType() TokenType {
