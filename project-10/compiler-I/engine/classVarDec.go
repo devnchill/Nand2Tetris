@@ -12,7 +12,7 @@ func (e *Engine) compileClassVarDec() error {
 		return err
 	}
 	if tokenType != lexer.Keyword || (lexeme != "static" && lexeme != "field") {
-		return fmt.Errorf("expected static or field keyword, got %s", tokenTypeToString[tokenType])
+		return fmt.Errorf("expected static or field keyword, got %s %s", tokenTypeToString[tokenType], lexeme)
 	}
 	e.writeToken(tokenType, lexeme)
 

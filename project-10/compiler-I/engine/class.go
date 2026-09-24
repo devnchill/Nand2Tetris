@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"nand2tetris/compiler-I/lexer"
+	"os"
 )
 
 func (e *Engine) CompileClass() error {
@@ -42,7 +43,16 @@ func (e *Engine) CompileClass() error {
 	}
 	e.writeToken(tokenType, lexeme)
 
-	e.compileClassVarDec()
+	err = e.compileClassVarDec()
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
+	err = e.compileSubroutine()
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
 
 	e.indent--
 	e.writeLine("</class>")

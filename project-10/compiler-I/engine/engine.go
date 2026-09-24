@@ -44,8 +44,6 @@ func (e *Engine) Close() {
 	e.Fp.Close()
 }
 
-func (e *Engine) compileSubroutine() {
-}
 func (e *Engine) compileParameterList() {
 }
 func (e *Engine) compileVarDec() {
