@@ -30,45 +30,30 @@ func (l *Lexer) isWhiteSpace(char byte) bool {
 }
 
 func (l *Lexer) HasMoreTokens() bool {
-	currPointer := l.pointer
+	return l.skipTrivia(l.pointer) < len(l.source)
+}
+
+// skipTrivia advances pointer past whitespace and comments
+func (l *Lexer) skipTrivia(pointer int) int {
 	for {
-		for currPointer < len(l.source) && l.isWhiteSpace(l.source[currPointer]) {
-			currPointer++
+		for pointer < len(l.source) && l.isWhiteSpace(l.source[pointer]) {
+			pointer++
 		}
-		if currPointer == len(l.source) {
-			return false
+		if pointer == len(l.source) {
+			return pointer
 		}
-		if l.source[currPointer] == '/' && currPointer+1 < len(l.source) && (l.source[currPointer+1] == '*' || l.source[currPointer+1] == '/') {
-			switch l.source[currPointer+1] {
-			case '/':
-				currPointer = l.skipComments(currPointer, false)
-			case '*':
-				currPointer = l.skipComments(currPointer, true)
-			}
+		if l.source[pointer] == '/' && pointer+1 < len(l.source) && (l.source[pointer+1] == '*' || l.source[pointer+1] == '/') {
+			pointer = l.skipComments(pointer, l.source[pointer+1] == '*')
 		} else {
 			break
 		}
 	}
-	return currPointer < len(l.source)
+	return pointer
 }
 
 // only to be called if HasMoreTokens is true
 func (l *Lexer) Advance() {
-	for {
-		for l.pointer < len(l.source) && l.isWhiteSpace(l.source[l.pointer]) {
-			l.pointer++
-		}
-		if l.source[l.pointer] == '/' && (l.source[l.pointer+1] == '/' || l.source[l.pointer+1] == '*') {
-			switch l.source[l.pointer+1] {
-			case '/':
-				l.pointer = l.skipComments(l.pointer, false)
-			case '*':
-				l.pointer = l.skipComments(l.pointer, true)
-			}
-		} else {
-			break
-		}
-	}
+	l.pointer = l.skipTrivia(l.pointer)
 	var sb strings.Builder
 	if l.source[l.pointer] == '"' {
 		l.pointer++
@@ -137,12 +122,16 @@ func (l *Lexer) skipComments(currPointer int, isMultilineComment bool) int {
 	return currPointer
 }
 
-func (l *Lexer) GetLexeme() string {
+func (l *Lexer) getLexeme() string {
 	return l.currentToken.lexeme
 }
 
-func (l *Lexer) GetTokenType() TokenType {
+func (l *Lexer) getTokenType() TokenType {
 	return l.currentToken.tokenType
+}
+
+func (l *Lexer) GetTokenTypeAndLexeme() (TokenType, string) {
+	return l.getTokenType(), l.getLexeme()
 }
 
 /* below methods would read `currentToken` stored in Lexer
