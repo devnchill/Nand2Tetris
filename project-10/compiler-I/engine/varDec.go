@@ -1,20 +1,18 @@
 package engine
 
-// classVarDec: ('static' | 'field') type identifier (',' identifier)* ';'
-func (e *Engine) compileClassVarDec() error {
-	e.writeLine("<classVarDec>")
+// varDec: 'var' type identifier (',' identifier)* ';'
+func (e *Engine) compileVarDec() error {
+	e.writeLine("<varDec>")
 	e.indent++
 
-	err := e.expectKeyword("static", "field")
+	err := e.expectKeyword("var")
 	if err != nil {
 		return err
 	}
-
 	err = e.expectType()
 	if err != nil {
 		return err
 	}
-
 	for {
 		err = e.expectIdentifier()
 		if err != nil {
@@ -24,20 +22,18 @@ func (e *Engine) compileClassVarDec() error {
 		if !e.peekIsSymbol(",") {
 			break
 		}
-
 		err = e.expectSymbol(",")
 		if err != nil {
 			return err
 		}
 	}
-
 	err = e.expectSymbol(";")
 	if err != nil {
 		return err
 	}
 
 	e.indent--
-	e.writeLine("</classVarDec>")
+	e.writeLine("</varDec>")
 
 	return nil
 }

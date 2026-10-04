@@ -7,9 +7,15 @@ import (
 )
 
 func main() {
-	engine := engine.NewCompilationEngine("../test/ArrayTest/Main.jack", "./build/jack.xml")
+	inputFilePath := "../test/ArrayTest/Main.jack"
+	outputFilePath := "./build/jack.xml"
+	if len(os.Args) == 3 {
+		inputFilePath, outputFilePath = os.Args[1], os.Args[2]
+	}
+
+	engine := engine.NewCompilationEngine(inputFilePath, outputFilePath)
 	err := engine.CompileClass()
-	defer engine.Close()
+	engine.Close()
 	if err != nil {
 		fmt.Print(err)
 		os.Exit(1)

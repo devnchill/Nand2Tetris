@@ -74,7 +74,7 @@ func (l *Lexer) Advance() {
 		sb.WriteByte(l.source[l.pointer])
 		l.pointer++
 	} else if l.isUnderScore() || l.isAlphabet() {
-		for l.isDigit() || l.isAlphabet() || l.isUnderScore() {
+		for l.pointer < len(l.source) && (l.isDigit() || l.isAlphabet() || l.isUnderScore()) {
 			sb.WriteByte(l.source[l.pointer])
 			l.pointer++
 		}
@@ -85,6 +85,22 @@ func (l *Lexer) Advance() {
 		}
 	}
 	l.currentToken.lexeme = sb.String()
+}
+
+// Peek returns the type and lexeme of the next token without consuming it,
+// so the caller can decide whether to Advance past it.
+// only to be called if HasMoreTokens is true
+func (l *Lexer) Peek() (TokenType, string) {
+	savedPointer := l.pointer
+	savedToken := l.currentToken
+
+	l.Advance()
+	tokenType, lexeme := l.GetTokenTypeAndLexeme()
+
+	l.pointer = savedPointer
+	l.currentToken = savedToken
+
+	return tokenType, lexeme
 }
 
 func (l *Lexer) isAlphabet() bool {
