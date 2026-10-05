@@ -4,7 +4,16 @@ import (
 	"fmt"
 	"nand2tetris/compiler-I/lexer"
 	"slices"
+	"strconv"
 	"strings"
+)
+
+var xmlEscaper = strings.NewReplacer(
+	"&", "&amp;",
+	"<", "&lt;",
+	">", "&gt;",
+	`"`, "&quot;",
+	"'", "&apos;",
 )
 
 func (e *Engine) writeIndent() {
@@ -21,7 +30,7 @@ func (e *Engine) writeLine(s string) {
 
 func (e *Engine) writeToken(tokenType lexer.TokenType, lexeme string) {
 	tType := tokenTypeToString[tokenType]
-	e.writeLine("<" + tType + "> " + lexeme + " </" + tType + ">")
+	e.writeLine("<" + tType + "> " + xmlEscaper.Replace(lexeme) + " </" + tType + ">")
 }
 
 func (e *Engine) next() (lexer.TokenType, string, error) {
@@ -49,12 +58,24 @@ func (e *Engine) peekIsKeyword(lexemes ...string) bool {
 	return tokenType == lexer.Keyword && contains(lexemes, lexeme)
 }
 
-func (e *Engine) peekIsSymbol(symbol string) bool {
+func (e *Engine) peekIsSymbol(symbols ...string) bool {
 	tokenType, lexeme, err := e.peek()
 	if err != nil {
 		return false
 	}
-	return tokenType == lexer.Symbol && lexeme == symbol
+	return tokenType == lexer.Symbol && contains(symbols, lexeme)
+}
+
+// peekIsStatement reports whether the next token can start a statement
+func (e *Engine) peekIsStatement() bool {
+	tokenType, lexeme, err := e.peek()
+	if err != nil {
+		return false
+	}
+	if tokenType == lexer.Symbol && lexeme == "{" {
+		return true
+	}
+	return tokenType == lexer.Keyword && contains([]string{"let", "if", "while", "do", "return"}, lexeme)
 }
 
 func contains(lexemes []string, lexeme string) bool {
@@ -112,14 +133,100 @@ func (e *Engine) expectTypeOrVoid() error {
 	return nil
 }
 
-func (e *Engine) expectSymbol(symbol string) error {
+func (e *Engine) expectSymbol(symbols ...string) error {
 	tokenType, lexeme, err := e.next()
 	if err != nil {
 		return err
 	}
-	if tokenType != lexer.Symbol || lexeme != symbol {
-		return fmt.Errorf("expected symbol '%s', got %s %s", symbol, tokenTypeToString[tokenType], lexeme)
+	if tokenType != lexer.Symbol || !contains(symbols, lexeme) {
+		return fmt.Errorf("expected symbol (%s), got %s %s", strings.Join(symbols, " | "), tokenTypeToString[tokenType], lexeme)
 	}
 	e.writeToken(tokenType, lexeme)
+	return nil
+}
+
+// expectExpressionListIfParenthesized compiles the '( expressionList )' of a
+// subroutine call, a varName that is called without arguments has no parens
+func (e *Engine) expectExpressionListIfParenthesized() error {
+	if !e.peekIsSymbol("(") {
+		return nil
+	}
+
+	err := e.expectSymbol("(")
+	if err != nil {
+		return err
+	}
+
+	err = e.compileExpressionList()
+	if err != nil {
+		return err
+	}
+
+	return e.expectSymbol(")")
+}
+
+/*
+'[' expression ']'
+
+	the token is already consumed when this is called,
+	so it only validates the contents of the brackets
+*/
+func (e *Engine) expectInsideBrackets() error {
+	err := e.expectSymbol("[")
+	if err != nil {
+		return err
+	}
+
+	err = e.compileExpression()
+	if err != nil {
+		return err
+	}
+
+	return e.expectSymbol("]")
+}
+
+// varName: 'this' | identifier '[' expression ']'?
+func (e *Engine) expectVarName() error {
+	tokenType, lexeme, err := e.next()
+	if err != nil {
+		return err
+	}
+
+	isVarName := tokenType == lexer.Identifier || (tokenType == lexer.Keyword && lexeme == "this")
+	if !isVarName {
+		return fmt.Errorf("expected varName (identifier | this), got %s %s", tokenTypeToString[tokenType], lexeme)
+	}
+	e.writeToken(tokenType, lexeme)
+
+	if e.peekIsSymbol("[") {
+		return e.expectInsideBrackets()
+	}
+
+	return nil
+}
+
+// expectIntegerConstant validates and writes the lexeme of an already
+// consumed integerConstant token, only 15-bit unsigned values fit in a word
+func (e *Engine) expectIntegerConstant(lexeme string) error {
+	value, err := strconv.Atoi(lexeme)
+	if err != nil {
+		return fmt.Errorf("invalid integer constant %s", lexeme)
+	}
+	if value < 0 || value > 32767 {
+		return fmt.Errorf("integer constant %d out of range (0..32767)", value)
+	}
+	e.writeToken(lexer.IntegerConstant, lexeme)
+	return nil
+}
+
+// expectStringConstant validates and writes the lexeme of an already consumed
+// stringConstant token, only printable characters fit in the character set
+func (e *Engine) expectStringConstant(lexeme string) error {
+	for _, char := range lexeme {
+		if char < ' ' || char > '~' {
+			return fmt.Errorf("illegal character '%c' (0x%02x) in string constant", char, char)
+		}
+	}
+	e.writeToken(lexer.StringConstant, lexeme)
 	return nil
 }

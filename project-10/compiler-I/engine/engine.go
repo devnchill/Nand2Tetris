@@ -43,35 +43,3 @@ func (e *Engine) Close() {
 	e.Writer.Flush()
 	e.Fp.Close()
 }
-
-func (e *Engine) compileDo() error {
-	return fmt.Errorf("compileDo: not implemented")
-}
-
-func (e *Engine) compileLet() error {
-	return fmt.Errorf("compileLet: not implemented")
-}
-
-func (e *Engine) compileWhile() error {
-	return fmt.Errorf("compileWhile: not implemented")
-}
-
-func (e *Engine) compileReturn() error {
-	return fmt.Errorf("compileReturn: not implemented")
-}
-
-func (e *Engine) compileIf() error {
-	return fmt.Errorf("compileIf: not implemented")
-}
-
-func (e *Engine) compileExpression() error {
-	return fmt.Errorf("compileExpression: not implemented")
-}
-
-func (e *Engine) compileTerm() error {
-	return fmt.Errorf("compileTerm: not implemented")
-}
-
-func (e *Engine) compileExpressionList() error {
-	return fmt.Errorf("compileExpressionList: not implemented")
-}
